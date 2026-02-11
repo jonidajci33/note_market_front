@@ -110,6 +110,6 @@ export function useNotes(params: NotesQueryParams) {
       const response = await apiRequest<NotesApiResponse>(toNotesPath(params));
       return normalizeNotes(response);
     },
-    enabled: Boolean(params.nicheId && params.sellerId && Array.isArray(params.tags) && params.tags.length > 0),
+    enabled: true,
   });
 }

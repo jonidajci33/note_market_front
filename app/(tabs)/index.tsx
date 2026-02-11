@@ -12,9 +12,7 @@ import { useAuthStore } from "@/store/auth";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-const DEFAULT_NOTES_TAGS = [
-  "api"
-];
+const DEFAULT_NOTES_TAGS: string[] = [];
 
 function getGreetingName(user: unknown): string {
   if (!user || typeof user !== "object") {
@@ -71,15 +69,15 @@ export default function HomeScreen() {
   const envNicheId = process.env.EXPO_PUBLIC_NOTES_NICHE_ID;
   const envTags = parseCsvList(process.env.EXPO_PUBLIC_NOTES_TAGS);
 
-  const resolvedSellerId = isUuid(userId) ? userId : isUuid(envSellerId) ? envSellerId : "00000000-0000-0000-0000-000000000101";
-  const resolvedNicheId = isUuid(envNicheId) ? envNicheId : "00000000-0000-0000-0000-000000000202";
+  const resolvedSellerId = isUuid(userId) ? userId : isUuid(envSellerId) ? envSellerId : "";
+  const resolvedNicheId = isUuid(envNicheId) ? envNicheId : "";
   const resolvedTags = envTags.length > 0 ? envTags : DEFAULT_NOTES_TAGS;
-  const backendCompatReady = resolvedSellerId.length > 0 && resolvedNicheId.length > 0 && resolvedTags.length > 0;
+  const backendCompatReady = true; // allow listing without seller/niche/tags
 
   const notesParams = useMemo(() => {
     const common = {
-      nicheId: resolvedNicheId,
-      sellerId: resolvedSellerId,
+      nicheId: resolvedNicheId || undefined,
+      sellerId: resolvedSellerId || undefined,
       tags: resolvedTags,
       q: debouncedSearch.trim().length > 0 ? debouncedSearch : "%",
       sort: "CREATED_AT_DESC" as const,
@@ -177,7 +175,14 @@ export default function HomeScreen() {
               </View>
             }
             renderItem={({ item }: { item: NoteSummary }) => (
-              <View className="mb-3 rounded-3xl border border-[#ECE2CF] bg-white px-4 py-4">
+              <Pressable
+                onPress={() => {
+                  const id = typeof item.id === "string" ? item.id : "";
+                  if (id) {
+                    router.push(`/note/${id}`);
+                  }
+                }}
+                className="mb-3 rounded-3xl border border-[#ECE2CF] bg-white px-4 py-4">
                 <View className="flex-row items-center justify-between">
                   <Text className="mr-3 flex-1 text-base font-semibold text-slate-800">{item.title}</Text>
                   <View className="rounded-full bg-[#FFF3DF] px-3 py-1">
@@ -189,7 +194,7 @@ export default function HomeScreen() {
                 ) : (
                   <Text className="mt-2 text-sm text-slate-400">Short note description will appear here.</Text>
                 )}
-              </View>
+              </Pressable>
             )}
             showsVerticalScrollIndicator={false}
           />
