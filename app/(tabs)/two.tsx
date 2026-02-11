@@ -1,31 +1,14 @@
-import { StyleSheet } from 'react-native';
-
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import { Text, View } from "react-native";
 
 export default function TabTwoScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/two.tsx" />
+    <View className="flex-1 items-center justify-center bg-[#F7F6F0] px-6">
+      <View className="w-full max-w-sm rounded-3xl bg-white p-6 shadow shadow-slate-200">
+        <Text className="text-2xl font-black text-slate-800">Library</Text>
+        <Text className="mt-3 text-base leading-6 text-slate-500">
+          Use this tab for secondary content like saved notes, progress, or account preferences.
+        </Text>
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
