@@ -50,10 +50,14 @@ export default function TabLayout() {
           title: 'Create',
           tabBarLabel: 'Create',
           tabBarIcon: ({ color }) => <TabBarIcon name="plus-circle" color={color} size={30} />,
-          tabBarButton: (props) => (
+          tabBarButton: ({ onPress, onLongPress, accessibilityState, accessibilityLabel, testID }) => (
             <Pressable
-              accessibilityLabel="Create note"
-              {...props}
+              accessibilityLabel={accessibilityLabel ?? "Create note"}
+              accessibilityRole="button"
+              accessibilityState={accessibilityState}
+              testID={testID}
+              onPress={onPress}
+              onLongPress={onLongPress}
               style={({ pressed }) => [
                 styles.centerButton,
                 { opacity: pressed ? 0.85 : 1 },

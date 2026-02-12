@@ -6,6 +6,7 @@ export type NoteSummary = {
   id: string;
   title: string;
   description?: string | null;
+  coverImageUrl?: string | null;
   price?: number | null;
   tags?: string[] | null;
   [key: string]: unknown;

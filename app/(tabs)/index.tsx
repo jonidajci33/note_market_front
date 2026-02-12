@@ -1,4 +1,5 @@
 import { FlashList } from "@shopify/flash-list";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, SafeAreaView, Text, View } from "react-native";
@@ -64,22 +65,20 @@ export default function HomeScreen() {
   const isAuthenticated = Boolean(token);
   const greetingName = getGreetingName(user);
 
-  const userId = typeof user?.id === "string" ? user.id : "";
   const envSellerId = process.env.EXPO_PUBLIC_NOTES_SELLER_ID;
   const envNicheId = process.env.EXPO_PUBLIC_NOTES_NICHE_ID;
   const envTags = parseCsvList(process.env.EXPO_PUBLIC_NOTES_TAGS);
 
-  const resolvedSellerId = isUuid(userId) ? userId : isUuid(envSellerId) ? envSellerId : "";
+  const resolvedSellerId = isUuid(envSellerId) ? envSellerId : "";
   const resolvedNicheId = isUuid(envNicheId) ? envNicheId : "";
   const resolvedTags = envTags.length > 0 ? envTags : DEFAULT_NOTES_TAGS;
-  const backendCompatReady = true; // allow listing without seller/niche/tags
 
   const notesParams = useMemo(() => {
     const common = {
       nicheId: resolvedNicheId || undefined,
       sellerId: resolvedSellerId || undefined,
-      tags: resolvedTags,
-      q: debouncedSearch.trim().length > 0 ? debouncedSearch : "%",
+      tags: resolvedTags.length > 0 ? resolvedTags : undefined,
+      q: debouncedSearch.trim().length > 0 ? debouncedSearch : undefined,
       sort: "CREATED_AT_DESC" as const,
       page: 0,
       size: 20,
@@ -97,15 +96,10 @@ export default function HomeScreen() {
       return {
         ...common,
         minPrice: 0.01,
-        maxPrice: 999999999,
       };
     }
 
-    return {
-      ...common,
-      minPrice: 0,
-      maxPrice: 999999999,
-    };
+    return common;
   }, [resolvedNicheId, resolvedSellerId, resolvedTags, debouncedSearch, activeFilter]);
 
   const { data, isLoading, isError, error, refetch } = useNotes(notesParams);
@@ -143,14 +137,7 @@ export default function HomeScreen() {
       <View className="flex-1 px-5 pb-6">
         <Text className="mb-3 text-lg font-bold text-slate-800">Popular Notes</Text>
 
-        {!backendCompatReady ? (
-          <View className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
-            <Text className="text-sm font-semibold text-amber-700">Notes feed is waiting for backend filter IDs.</Text>
-            <Text className="mt-2 text-sm text-amber-700/90">
-              Set `EXPO_PUBLIC_NOTES_SELLER_ID` and `EXPO_PUBLIC_NOTES_NICHE_ID` in `.env` to enable listing safely.
-            </Text>
-          </View>
-        ) : isError ? (
+        {isError ? (
           <View className="rounded-3xl border border-rose-200 bg-rose-50 p-5">
             <Text className="text-sm font-semibold text-rose-600">
               {error instanceof Error ? error.message : "Unable to load notes."}
@@ -189,6 +176,9 @@ export default function HomeScreen() {
                     <Text className="text-xs font-semibold text-[#D97706]">{formatPrice(item.price)}</Text>
                   </View>
                 </View>
+                {typeof item.coverImageUrl === "string" && item.coverImageUrl.trim().length > 0 ? (
+                  <Image source={{ uri: item.coverImageUrl }} contentFit="cover" className="mt-3 h-28 w-full rounded-2xl bg-slate-100" />
+                ) : null}
                 {typeof item.description === "string" && item.description.trim().length > 0 ? (
                   <Text className="mt-2 text-sm text-slate-500">{item.description}</Text>
                 ) : (

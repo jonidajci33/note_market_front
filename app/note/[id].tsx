@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { Image } from "expo-image";
 import { useEffect } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
@@ -37,6 +38,7 @@ export default function NoteDetailScreen() {
   }
 
   const isFree = !note?.price || note.price <= 0;
+  const createdAtLabel = typeof note?.createdAt === "string" ? note.createdAt : "";
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F6F0]">
@@ -55,12 +57,15 @@ export default function NoteDetailScreen() {
 
         {note ? (
           <View className="rounded-3xl border border-[#ECE2CF] bg-white p-6">
+            {typeof note.coverImageUrl === "string" && note.coverImageUrl.trim().length > 0 ? (
+              <Image source={{ uri: note.coverImageUrl }} contentFit="cover" className="mb-4 h-44 w-full rounded-2xl bg-slate-100" />
+            ) : null}
             <Text className="text-2xl font-black text-slate-800">{note.title}</Text>
             <Text className="mt-2 text-base text-slate-500">{note.description ?? "No description"}</Text>
 
             <View className="mt-4 flex-row items-center justify-between">
               <Text className="text-xl font-extrabold text-slate-800">{formatPrice(note.price)}</Text>
-              <Text className="text-xs text-slate-400">{note.createdAt ?? ""}</Text>
+              <Text className="text-xs text-slate-400">{createdAtLabel}</Text>
             </View>
 
             {Array.isArray(note.tags) && note.tags.length > 0 ? (
@@ -76,15 +81,15 @@ export default function NoteDetailScreen() {
             <View className="mt-6">
               {isFree ? (
                 <PrimaryButton
-                  title={addFree.isLoading ? "Adding..." : "Add to Library"}
+                  title={addFree.isPending ? "Adding..." : "Add to Library"}
                   onPress={() => addFree.mutate()}
-                  disabled={addFree.isLoading}
+                  disabled={addFree.isPending}
                 />
               ) : (
                 <PrimaryButton
-                  title={purchase.isLoading ? "Buying..." : "Buy"}
+                  title={purchase.isPending ? "Buying..." : "Buy"}
                   onPress={() => purchase.mutate()}
-                  disabled={purchase.isLoading}
+                  disabled={purchase.isPending}
                 />
               )}
               {(purchase.isError || addFree.isError) && (

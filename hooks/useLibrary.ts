@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiRequest } from "@/lib/api";
+import type { NoteSummary } from "@/hooks/useNotes";
 import { useAuthStore } from "@/store/auth";
 
 export type LibraryItem = {
@@ -8,6 +9,7 @@ export type LibraryItem = {
   itemType?: string;
   itemId?: string;
   grantedAt?: string;
+  note?: NoteSummary | null;
   [key: string]: unknown;
 };
 
@@ -43,7 +45,25 @@ export function useLibrary() {
           Authorization: `Bearer ${token}`,
         },
       });
-      return normalizeItems(response);
+      const items = normalizeItems(response);
+
+      const hydratedItems = await Promise.all(
+        items.map(async (item) => {
+          const type = typeof item.itemType === "string" ? item.itemType.toUpperCase() : "";
+          if (type !== "NOTE" || !item.itemId) {
+            return item;
+          }
+
+          try {
+            const note = await apiRequest<NoteSummary>(`/api/v1/notes/${item.itemId}`);
+            return { ...item, note };
+          } catch {
+            return { ...item, note: null };
+          }
+        }),
+      );
+
+      return hydratedItems;
     },
   });
 }
