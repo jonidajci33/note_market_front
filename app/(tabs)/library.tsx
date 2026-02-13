@@ -2,9 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Linking, Pressable, SafeAreaView, Text, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
 
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { useLibrary, type LibraryItem } from "@/hooks/useLibrary";
 import { apiRequest } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
@@ -68,7 +69,7 @@ function LibraryCard({
       </View>
 
       {note && typeof note.coverImageUrl === "string" && note.coverImageUrl.trim().length > 0 ? (
-        <Image source={{ uri: note.coverImageUrl }} contentFit="cover" className="mt-3 h-24 w-full rounded-xl bg-slate-100" />
+        <Image source={{ uri: note.coverImageUrl }} contentFit="cover" className="mt-3 bg-slate-100" style={{ width: "100%", height: 96, borderRadius: 12 }} />
       ) : null}
 
       {description ? <Text className="mt-2 text-sm text-slate-500">{description}</Text> : null}
@@ -125,10 +126,13 @@ export default function LibraryScreen() {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F6F0]">
-      <View className="flex-1 px-5 pb-6 pt-4">
-        <Text className="mb-2 text-2xl font-extrabold text-slate-800">Your Library</Text>
-        <Text className="mb-4 text-sm text-slate-500">Purchased or saved notes appear here.</Text>
+    <View className="flex-1 bg-[#F8F6F0]">
+      <ScreenHeader
+        title="Your Library"
+        subtitle="Purchased or saved notes appear here."
+      />
+
+      <View className="flex-1 px-5 pb-6">
 
         {isError ? (
           <View className="rounded-3xl border border-rose-200 bg-rose-50 p-4">
@@ -178,6 +182,6 @@ export default function LibraryScreen() {
           </>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

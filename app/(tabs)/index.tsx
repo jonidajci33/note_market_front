@@ -1,12 +1,13 @@
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { FlashList } from "@shopify/flash-list";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, SafeAreaView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { FilterChipsRow, type NotesPriceFilter } from "@/components/ui/FilterChipsRow";
 import { HomeSearchBar } from "@/components/ui/HomeSearchBar";
-import { HomeTopBar } from "@/components/ui/HomeTopBar";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { type NoteSummary, useNotes } from "@/hooks/useNotes";
 import { useAuthStore } from "@/store/auth";
@@ -114,25 +115,37 @@ export default function HomeScreen() {
     router.push("/session");
   };
 
-  return (
-    <SafeAreaView className="flex-1 bg-[#F8F6F0]">
-      <View className="relative px-5 pb-5 pt-4">
-        <View className="absolute inset-x-0 -top-10 h-64 rounded-b-[44px] bg-[#F6EECE]" />
-        <View className="absolute -left-12 top-6 h-32 w-32 rounded-full bg-[#FDE7A5]/60" />
-        <View className="absolute right-5 top-4 h-20 w-20 rounded-full bg-[#FFF5DA]/80" />
-        <View className="absolute right-20 top-16 h-10 w-10 rounded-full bg-white/60" />
+  const profileButton = (
+    <Pressable
+      accessibilityLabel="Open session"
+      accessibilityRole="button"
+      className="h-12 w-12 items-center justify-center rounded-full border border-[#EFE5CE] bg-white shadow-sm shadow-[#E9DFC9]"
+      onPress={handleProfilePress}
+    >
+      {isAuthenticated ? (
+        <Image
+          className="h-9 w-9 rounded-full bg-[#F9F4E8]"
+          contentFit="cover"
+          source={require("../../assets/images/icon.png")}
+        />
+      ) : (
+        <FontAwesome color="#64748B" name="bell-o" size={18} />
+      )}
+    </Pressable>
+  );
 
-        <View className="gap-4">
-          <HomeTopBar
-            greeting={greetingName ? `Hello, ${greetingName}!` : "Hello!"}
-            isAuthenticated={isAuthenticated}
-            onProfilePress={handleProfilePress}
-            subtitle="Discover simple notes that match your next step."
-          />
-          <HomeSearchBar onChangeText={setSearchValue} onClear={() => setSearchValue("")} value={searchValue} />
+  return (
+    <View className="flex-1 bg-[#F8F6F0]">
+      <ScreenHeader
+        title={greetingName ? `Hello, ${greetingName}!` : "Hello!"}
+        subtitle="Discover simple notes that match your next step."
+        rightAction={profileButton}
+      >
+        <HomeSearchBar onChangeText={setSearchValue} onClear={() => setSearchValue("")} value={searchValue} />
+        <View className="mt-3">
           <FilterChipsRow activeFilter={activeFilter} onFilterChange={setActiveFilter} />
         </View>
-      </View>
+      </ScreenHeader>
 
       <View className="flex-1 px-5 pb-6">
         <Text className="mb-3 text-lg font-bold text-slate-800">Popular Notes</Text>
@@ -177,12 +190,17 @@ export default function HomeScreen() {
                   </View>
                 </View>
                 {typeof item.coverImageUrl === "string" && item.coverImageUrl.trim().length > 0 ? (
-                  <Image source={{ uri: item.coverImageUrl }} contentFit="cover" className="mt-3 h-28 w-full rounded-2xl bg-slate-100" />
+                  <Image
+                    source={{ uri: item.coverImageUrl }}
+                    contentFit="cover"
+                    className="mt-3 bg-slate-100"
+                    style={{ width: "100%", height: 112, borderRadius: 16 }}
+                  />
                 ) : null}
                 {typeof item.description === "string" && item.description.trim().length > 0 ? (
-                  <Text className="mt-2 text-sm text-slate-500">{item.description}</Text>
+                  <Text className="mt-3 text-sm text-slate-500">{item.description}</Text>
                 ) : (
-                  <Text className="mt-2 text-sm text-slate-400">Short note description will appear here.</Text>
+                  <Text className="mt-3 text-sm text-slate-400">Short note description will appear here.</Text>
                 )}
               </Pressable>
             )}
@@ -190,6 +208,6 @@ export default function HomeScreen() {
           />
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

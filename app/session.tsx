@@ -7,6 +7,8 @@ export default function SessionScreen() {
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const email = typeof user?.email === "string" ? user.email : "No email";
+  const roles = Array.isArray(user?.roles) ? (user.roles as string[]) : [];
+  const isSysadmin = roles.includes("SYSADMIN");
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F6F0] px-5 pt-6">
@@ -26,6 +28,14 @@ export default function SessionScreen() {
             <Text className="text-sm font-semibold text-white">Logout</Text>
           </Pressable>
         </View>
+        {isSysadmin ? (
+          <Pressable
+            className="mt-4 rounded-full bg-[#6366f1] px-5 py-2.5 self-start"
+            onPress={() => router.push("/admin" as never)}
+          >
+            <Text className="text-sm font-semibold text-white">Admin Panel</Text>
+          </Pressable>
+        ) : null}
       </View>
     </SafeAreaView>
   );

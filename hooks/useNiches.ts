@@ -6,18 +6,21 @@ export type Niche = {
   id: string;
   slug: string;
   name: string;
-  parentId?: string | null;
+  categoryId: string;
 };
 
-export function useNiches() {
+export function useNiches(categoryId?: string) {
+  const path = categoryId ? `/api/v1/niches?categoryId=${categoryId}` : "/api/v1/niches";
   return useQuery({
-    queryKey: ["niches"],
+    queryKey: ["niches", categoryId ?? "all"],
     queryFn: async () => {
-      const response = await apiRequest<Niche[]>("/api/v1/niches");
+      const response = await apiRequest<Niche[]>(path);
       if (!Array.isArray(response)) {
         return [];
       }
-      return response.filter((n): n is Niche => typeof n.id === "string" && typeof n.name === "string" && typeof n.slug === "string");
+      return response.filter(
+        (n): n is Niche => typeof n.id === "string" && typeof n.name === "string" && typeof n.slug === "string",
+      );
     },
   });
 }

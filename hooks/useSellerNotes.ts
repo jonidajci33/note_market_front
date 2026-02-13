@@ -1,27 +1,36 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiRequest } from "@/lib/api";
-import type { NotesPage, NotesQueryParams } from "@/hooks/useNotes";
+import type { NoteSummary } from "@/hooks/useNotes";
+import { useAuthStore } from "@/store/auth";
+
+type SellerNotesPage = {
+  content: NoteSummary[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
 
 export function useSellerNotes(sellerId?: string) {
-  const params: NotesQueryParams = {
-    sellerId,
-    sort: "CREATED_AT_DESC",
-    page: 0,
-    size: 20,
-  };
-
   return useQuery({
     queryKey: ["sellerNotes", sellerId],
     enabled: Boolean(sellerId),
     queryFn: async () => {
-      const search = new URLSearchParams();
-      if (sellerId) search.set("sellerId", sellerId);
-      search.set("sort", "CREATED_AT_DESC");
-      search.set("page", "0");
-      search.set("size", "20");
-      const response = await apiRequest<NotesPage>(`/api/v1/notes?${search.toString()}`);
-      return response;
+      const token = useAuthStore.getState().token;
+      const response = await apiRequest<NoteSummary[]>("/api/v1/seller/notes", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const notes = Array.isArray(response) ? response : [];
+      return {
+        content: notes,
+        page: 0,
+        size: notes.length,
+        totalElements: notes.length,
+        totalPages: 1,
+      } as SellerNotesPage;
     },
   });
 }

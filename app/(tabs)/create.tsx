@@ -4,12 +4,14 @@ import { Image } from "expo-image";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
+import { useCategories, type Category } from "@/hooks/useCategories";
 import { useNiches, type Niche } from "@/hooks/useNiches";
 import { useSellerNotes } from "@/hooks/useSellerNotes";
 import { type NoteSummary } from "@/hooks/useNotes";
 import { apiRequest } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
 
 type CreateNotePayload = {
   nicheId: string;
@@ -181,6 +183,7 @@ export default function CreateNoteScreen() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("0");
   const [tags, setTags] = useState("api");
+  const [categoryId, setCategoryId] = useState("");
   const [nicheId, setNicheId] = useState("");
   const [courseId, setCourseId] = useState("");
 
@@ -198,7 +201,8 @@ export default function CreateNoteScreen() {
   const [connectivityInfo, setConnectivityInfo] = useState<string | null>(null);
 
   const { data: sellerNotes, isLoading: notesLoading, isError: notesError, error: notesErrorObj, refetch: refetchNotes } = useSellerNotes(userId);
-  const { data: niches, isLoading: nichesLoading, isError: nichesError } = useNiches();
+  const { data: categories, isLoading: categoriesLoading, isError: categoriesError } = useCategories();
+  const { data: niches, isLoading: nichesLoading, isError: nichesError } = useNiches(categoryId || undefined);
 
   const createNote = useMutation({
     mutationFn: async (payload: CreateNotePayload) => {
@@ -238,6 +242,7 @@ export default function CreateNoteScreen() {
     setDescription("");
     setPrice("0");
     setTags("api");
+    setCategoryId("");
     setNicheId("");
     setCourseId("");
     setStep(1);
@@ -477,6 +482,15 @@ export default function CreateNoteScreen() {
 
       const session = await requestNoteUploadSession(createdNoteId, noteFile, "application/pdf");
       await uploadFileToPresignedUrl(session, noteFile, "application/pdf");
+
+      await apiRequest(`/api/v1/seller/notes/${createdNoteId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${useAuthStore.getState().token}`,
+        },
+        body: JSON.stringify({ status: "PUBLISHED" }),
+      });
+
       await refetchNotes();
       resetFlow();
       setLocalInfo("Note published successfully.");
@@ -492,12 +506,15 @@ export default function CreateNoteScreen() {
   const currentStepTitle = step === 1 ? "Step 1: Note details" : step === 2 ? "Step 2: Cover picture" : "Step 3: Note file";
 
   return (
-    <ScrollView className="flex-1 bg-[#F8F6F0]" contentContainerStyle={{ padding: 20, paddingBottom: 36 }}>
-      <View className="mb-4 rounded-3xl bg-white p-6 shadow shadow-slate-200">
-        <Text className="text-2xl font-black text-slate-800">Create a new note</Text>
-        <Text className="mt-2 text-sm text-slate-500">Use the guided flow to publish your note with files.</Text>
+    <View className="flex-1 bg-[#F8F6F0]">
+      <ScreenHeader
+        title="Create"
+        subtitle="Publish your note with the guided flow."
+      />
 
-        <View className="mt-4 flex-row gap-2">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 36 }}>
+        <View className="mb-4 rounded-3xl bg-white p-6 shadow shadow-slate-200">
+          <View className="flex-row gap-2">
           <StepPill label="1. Details" active={step === 1} done={step > 1} />
           <StepPill label="2. Cover" active={step === 2} done={step > 2} />
           <StepPill label="3. File" active={step === 3} done={false} />
@@ -536,27 +553,54 @@ export default function CreateNoteScreen() {
             />
 
             <View className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-              <Text className="text-sm font-semibold text-slate-700">Niche</Text>
-              {nichesLoading ? (
-                <Text className="mt-1 text-sm text-slate-500">Loading niches...</Text>
-              ) : nichesError ? (
-                <Text className="mt-1 text-sm text-rose-600">Unable to load niches. Check connection.</Text>
+              <Text className="text-sm font-semibold text-slate-700">Category</Text>
+              {categoriesLoading ? (
+                <Text className="mt-1 text-sm text-slate-500">Loading categories...</Text>
+              ) : categoriesError ? (
+                <Text className="mt-1 text-sm text-rose-600">Unable to load categories. Check connection.</Text>
               ) : (
                 <View className="mt-2 flex-row flex-wrap gap-2">
-                  {(niches ?? []).map((n: Niche) => {
-                    const active = nicheId === n.id;
+                  {(categories ?? []).map((c: Category) => {
+                    const active = categoryId === c.id;
                     return (
                       <Pressable
-                        key={n.id}
-                        onPress={() => setNicheId(n.id)}
-                        className={`rounded-full px-3 py-2 ${active ? "bg-[#f97316]" : "bg-slate-100"}`}>
-                        <Text className={`text-xs font-semibold ${active ? "text-white" : "text-slate-700"}`}>{n.name}</Text>
+                        key={c.id}
+                        onPress={() => { setCategoryId(c.id); setNicheId(""); }}
+                        className={`rounded-full px-3 py-2 ${active ? "bg-[#6366f1]" : "bg-slate-100"}`}>
+                        <Text className={`text-xs font-semibold ${active ? "text-white" : "text-slate-700"}`}>{c.name}</Text>
                       </Pressable>
                     );
                   })}
                 </View>
               )}
             </View>
+
+            {categoryId.length > 0 ? (
+              <View className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <Text className="text-sm font-semibold text-slate-700">Niche</Text>
+                {nichesLoading ? (
+                  <Text className="mt-1 text-sm text-slate-500">Loading niches...</Text>
+                ) : nichesError ? (
+                  <Text className="mt-1 text-sm text-rose-600">Unable to load niches. Check connection.</Text>
+                ) : (niches ?? []).length === 0 ? (
+                  <Text className="mt-1 text-sm text-slate-500">No niches for this category yet.</Text>
+                ) : (
+                  <View className="mt-2 flex-row flex-wrap gap-2">
+                    {(niches ?? []).map((n: Niche) => {
+                      const active = nicheId === n.id;
+                      return (
+                        <Pressable
+                          key={n.id}
+                          onPress={() => setNicheId(n.id)}
+                          className={`rounded-full px-3 py-2 ${active ? "bg-[#f97316]" : "bg-slate-100"}`}>
+                          <Text className={`text-xs font-semibold ${active ? "text-white" : "text-slate-700"}`}>{n.name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+            ) : null}
 
             <TextInput
               placeholder="Course ID (optional UUID)"
@@ -660,14 +704,21 @@ export default function CreateNoteScreen() {
           (sellerNotes?.content ?? []).map((note: NoteSummary) => (
             <View key={note.id ?? `${note.title}`} className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3">
               <View className="flex-row items-center justify-between">
-                <Text className="text-base font-semibold text-slate-800">{note.title ?? "Untitled"}</Text>
-                <View className="rounded-full bg-[#FFF3DF] px-3 py-1">
-                  <Text className="text-xs font-semibold text-[#D97706]">{typeof note.price === "number" ? `$${note.price.toFixed(2)}` : "Free"}</Text>
+                <Text className="flex-1 text-base font-semibold text-slate-800">{note.title ?? "Untitled"}</Text>
+                <View className="flex-row items-center gap-2">
+                  {typeof (note as Record<string, unknown>).status === "string" && (note as Record<string, unknown>).status === "DRAFT" ? (
+                    <View className="rounded-full bg-amber-100 px-2 py-1">
+                      <Text className="text-xs font-semibold text-amber-700">Draft</Text>
+                    </View>
+                  ) : null}
+                  <View className="rounded-full bg-[#FFF3DF] px-3 py-1">
+                    <Text className="text-xs font-semibold text-[#D97706]">{typeof note.price === "number" ? `$${note.price.toFixed(2)}` : "Free"}</Text>
+                  </View>
                 </View>
               </View>
 
               {typeof note.coverImageUrl === "string" && note.coverImageUrl.length > 0 ? (
-                <Image source={{ uri: note.coverImageUrl }} contentFit="cover" className="mt-3 h-28 w-full rounded-xl bg-slate-100" />
+                <Image source={{ uri: note.coverImageUrl }} contentFit="cover" className="mt-3 bg-slate-100" style={{ width: "100%", height: 112, borderRadius: 12 }} />
               ) : null}
 
               {note.description ? <Text className="mt-2 text-sm text-slate-500">{note.description}</Text> : null}
@@ -685,5 +736,6 @@ export default function CreateNoteScreen() {
         )}
       </View>
     </ScrollView>
+    </View>
   );
 }

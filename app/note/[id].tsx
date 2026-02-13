@@ -58,7 +58,7 @@ export default function NoteDetailScreen() {
         {note ? (
           <View className="rounded-3xl border border-[#ECE2CF] bg-white p-6">
             {typeof note.coverImageUrl === "string" && note.coverImageUrl.trim().length > 0 ? (
-              <Image source={{ uri: note.coverImageUrl }} contentFit="cover" className="mb-4 h-44 w-full rounded-2xl bg-slate-100" />
+              <Image source={{ uri: note.coverImageUrl }} contentFit="cover" className="mb-4 bg-slate-100" style={{ width: "100%", height: 176, borderRadius: 16 }} />
             ) : null}
             <Text className="text-2xl font-black text-slate-800">{note.title}</Text>
             <Text className="mt-2 text-base text-slate-500">{note.description ?? "No description"}</Text>

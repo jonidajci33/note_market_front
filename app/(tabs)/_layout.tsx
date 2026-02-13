@@ -50,7 +50,7 @@ export default function TabLayout() {
           title: 'Create',
           tabBarLabel: 'Create',
           tabBarIcon: ({ color }) => <TabBarIcon name="plus-circle" color={color} size={30} />,
-          tabBarButton: ({ onPress, onLongPress, accessibilityState, accessibilityLabel, testID }) => (
+          tabBarButton: ({ onPress, onLongPress, accessibilityState, accessibilityLabel, testID, style }) => (
             <Pressable
               accessibilityLabel={accessibilityLabel ?? "Create note"}
               accessibilityRole="button"
@@ -59,6 +59,7 @@ export default function TabLayout() {
               onPress={onPress}
               onLongPress={onLongPress}
               style={({ pressed }) => [
+                style,
                 styles.centerButton,
                 { opacity: pressed ? 0.85 : 1 },
               ]}>
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     top: -12,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 80,
+    flex: 1,
   },
   centerIconWrapper: {
     height: 56,
